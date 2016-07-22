@@ -8,7 +8,7 @@ CollectD 浅析
 
 ### 1.1. 主要调用流程
 
-!["流程图"]("https://raw.githubusercontent.com/theburn/MyPublicNote/master/images/flow_collectd.png")
+![流程图](https://raw.githubusercontent.com/theburn/MyPublicNote/master/images/flow_collectd.png)
 
 1. `main`进入后，开始做`init`操作，即`do_init()`，其中最主要的就是`plugin_init_all()`（_初始化插件_)，包括：
     - 获得配置文件参数
