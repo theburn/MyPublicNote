@@ -10,6 +10,7 @@ CollectD 浅析
 
 ![流程图](https://raw.githubusercontent.com/theburn/MyPublicNote/master/images/flow_collectd.png)
 
+
 1. `main`进入后，开始做`init`操作，即`do_init()`，其中最主要的就是`plugin_init_all()`（_初始化插件_)，包括：
     - 获得配置文件参数
     - 初始化`WriteThreads`（_没看到man文件中有这个参数，但是配置上去是有效的_）
@@ -23,6 +24,12 @@ CollectD 浅析
     - 然后调用`fc_bit_write_invoke()`函数
     - 最后调用`plugin_write()`函数，`这个是真正意义上的写数据的函数`
 
+
+
+### 2.1. 关于uc_check_timeout
+
+当你配置文件中的`Interval`设置过短，导致你一轮的plugin调用还没完成，又发起了另一轮的调用，此时会触发该函数中的`plugin_dispatch_missing({miss_val})`。
+在CollectD中发起第N轮调用时，发现有些值在第N-1轮中还没更新，这些没有更新的值称之为 `missing value`（漏测值） 
 
 
 
@@ -60,6 +67,10 @@ struct value_list_s
 我们可以将其改成如下形式：
 
 > host "." plugin ["." plugin instance] "/" type ["-" type instance]
+
+需要修改如下两个文件的函数，即可完成对`Identifier`格式的修改
+
+* **src/daemon/utils_cache.c**
 
 ```cpp
 /*
@@ -115,6 +126,7 @@ int parse_identifier (char *str, char **ret_host,
 } /* int parse_identifier */
 ```
 
+* **src/daemon/common.c**
 ```cpp
 /*
 * Filename：src/daemon/common.c
