@@ -1,44 +1,14 @@
 CollectD 浅析
 ===========================
 
-@(sunminlei的笔记本)
-
-[TOC]
-
+由于工作关系，这阵子需要调研一下Collectd，并编写了几个插件，在Debug的过程中，发现对Collectd的调用过程一无所知，
+且网上基本找不到很详细的说明资料，所以只能自己翻源码看了，时间仓促，如有不对的地方，望指正。
 
 ## 一. CollectD 调用浅析
 
 ### 1.1. 主要调用流程
 
-```flow
-st=>start: Start
-e=>end
-op_main=>operation: main()
-op_init=>operation: do_init()
-op_plugin_init=>operation: plugin_init_all()
-op_loop=>operation: do_loop()
-op_plugin=>operation: plugin_read_all()
-op_update_statistics=>operation: plugin_update_internal_statistics()
-op_ds_val=>operation: plugin_dispatch_values()
-op_plugin_enq=>operation: plugin_write_enqueue()
-op_uc_chk_t=>operation: uc_check_timeout()
-op_get_iter=>operation: c_avl_get_iterator(cache_tree)
-op_iter_cache_tree=>operation: c_avl_iterator_next({iter})
-cond=>condition: update time out 
-                Yes or No?
-
-op_keys_list=>operation: construct a keys list
-
-op_parse_keys=>operation: parse_identifier_vl({keys})
-
-op_miss_dispatch=>operation: plugin_dispatch_missing({miss_val})
-
-st->op_main->op_init->op_plugin_init()->op_loop->op_plugin->op_update_statistics->op_ds_val->op_plugin_enq->op_uc_chk_t->cond->op_get_iter->op_iter_cache_tree
-cond(yes)->op_keys_list->op_parse_keys->op_miss_dispatch->op_loop
-cond(no)->op_loop
-
-```
-
+["流程图"]("./images/flow_collectd.png")
 1. `main`进入后，开始做`init`操作，即`do_init()`，其中最主要的就是`plugin_init_all()`（_初始化插件_)，包括：
     - 获得配置文件参数
     - 初始化`WriteThreads`（_没看到man文件中有这个参数，但是配置上去是有效的_）
